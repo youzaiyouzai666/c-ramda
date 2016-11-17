@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+    <meta charset="UTF-8">
+    <title></title>
+</head>
+<body>
+
+</body>
+<script src="../index.js"></script>
+<script>
+    !(function (){
+        function add(a,b,c,d){
+            return a+b+c+d;
+        }
+        /* var double = x =>  x * 2;*/
+        var f = R.curry(add);
+        var g = f(1,2,3);
+        console.log(g);
+        console.log(g(4));
+    }).call(this);
+</script>
+</html>
