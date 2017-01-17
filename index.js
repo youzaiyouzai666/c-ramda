@@ -1,145 +1,51 @@
-;
-(function () {
-    'use strict';
-    var __ = {util: "placeholder"};
-    var base = {
+/**
+ * Created by Administrator on 2017/1/17.
+ */
+// 函数式编程版本：
+// (起初有点难理解，但是更健壮、无缺陷)
+// 用到的函数式编程技术：Functor、Maybe Monad 和柯里化
+const R = require('ramda');
+const prop = R.prop;
+const path = R.path;
+const curry = R.curry;
+const Maybe = require('ramda-fantasy').Maybe;
 
-        curry:function curry(fn) {
-            var  oThis= this;
-            return oThis._curryN(fn.length, fn);
-        },
-        map: function(){
-            var oThis = this;
-            this.curry(oThis._map);
-        },
-        _map: function(){
-            var len = functor.length,
-                result = Array(len);
-            for (var i = 0; i < len; i++) {
-                result[i] = fn(functor[i]);
-            }
-            return result;
-        },
-        /* 对象转数组
-         * {}->[]
-         */
-        toArray: function _toArray(o) {
-            var a = [];
-            for (var i = 0; i < o.length; i++)a.push(o[i]);
-            return a;
-        },
-        _curryN: function(length, fn) {
-            var oThis = this;
-            return oThis.arity(length, function () {
-                var n = arguments.length;
-                var shortfall = length - n;
-                var idx = n;
-                while (--idx >= 0) {
-                    if (arguments[idx] === __) {
-                        shortfall += 1;
-                    }
-                }
-                if (shortfall <= 0) {
-                    return fn.apply(this, arguments);
-                } else {
-                    var initialArgs = oThis.toArray(arguments);
-                    return oThis._curryN(shortfall, function () {
-                        var currentArgs = oThis.toArray(arguments);
-                        var combinedArgs = [];
-                        var idx = -1;
-                        while (++idx < n) {
-                            var val = initialArgs[idx];
-                            combinedArgs[idx] = (val === __ ? currentArgs.shift() : val);
-                        }
-                        return fn.apply(this, combinedArgs.concat(currentArgs));
-                    });
-                }
-            })
-        },
-
-        //改变function的length
-        arity: function arity(n, fn) {
-            switch (n) {
-                case 0:
-                    return function () {
-                        return fn.apply(this, arguments);
-                    };
-                case 1:
-                    return function (a0) {
-                        void a0;
-                        return fn.apply(this, arguments);
-                    };
-                case 2:
-                    return function (a0, a1) {
-                        void a1;
-                        return fn.apply(this, arguments);
-                    };
-                case 3:
-                    return function (a0, a1, a2) {
-                        void a2;
-                        return fn.apply(this, arguments);
-                    };
-                case 4:
-                    return function (a0, a1, a2, a3) {
-                        void a3;
-                        return fn.apply(this, arguments);
-                    };
-                case 5:
-                    return function (a0, a1, a2, a3, a4) {
-                        void a4;
-                        return fn.apply(this, arguments);
-                    };
-                case 6:
-                    return function (a0, a1, a2, a3, a4, a5) {
-                        void a5;
-                        return fn.apply(this, arguments);
-                    };
-                case 7:
-                    return function (a0, a1, a2, a3, a4, a5, a6) {
-                        void a6;
-                        return fn.apply(this, arguments);
-                    };
-                case 8:
-                    return function (a0, a1, a2, a3, a4, a5, a6, a7) {
-                        void a7;
-                        return fn.apply(this, arguments);
-                    };
-                case 9:
-                    return function (a0, a1, a2, a3, a4, a5, a6, a7, a8) {
-                        void a8;
-                        return fn.apply(this, arguments);
-                    };
-                case 10:
-                    return function (a0, a1, a2, a3, a4, a5, a6, a7, a8, a9) {
-                        void a9;
-                        return fn.apply(this, arguments);
-                    };
-                default:
-                    throw new Error('First argument to arity must be a non-negative integer no greater than ten');
-            }
+//User 对象
+let joeUser = {
+    name: 'joe',
+    email: 'joe@example.com',
+    prefs: {
+        languages: {
+            primary: 'sp',
+            secondary: 'en'
         }
-        }
-
-
-    /**
-     *
-     * @type {{}}
-     */
-    var R = {
-        map: base.map
-        ,curry: base.curry
-        ,toArray: base.toArray
-    };
-    /**
-     * 外部暴露接口
-     */
-    if (typeof exports === 'object') {
-        module.exports = R;
-    } else if (typeof define === 'function' && define.amd) {
-        define(function () {
-            return R;
-        });
-    } else {
-        this.R = R;
     }
-}.call(this));
+};
+
+//全局的 indexURLs，映射不同的语言
+let indexURLs = {
+    'en': 'http://mysite.com/en',  //English
+    'sp': 'http://mysite.com/sp', //Spanish
+    'jp': 'http://mysite.com/jp'   //Japanese
+}
+
+const getURLForUser = (user) => {
+    return Maybe(user) //将 user 封装到一个 Maybe 对象
+        .map(path(['prefs', 'languages', 'primary'])) //使用 Ramda 来获取首选语言
+        .chain(maybeGetUrl); // 传递语言给 maybeGetUrl，得到 URL 或者null Monad
+}
+
+const maybeGetUrl = R.curry(function(allUrls, language) { // 柯里化来将它转换为一个函数参数
+    return Maybe(allUrls[language]); // 返回 Monad(url | null)
+})(indexURLs); // 传递 indexURLs 而不是全局访问
+
+
+
+//应用 url 到 window.location
+const showIndexPage = (url) => { console.log(url) };
+
+function boot(user, defaultURL) {
+    showIndexPage(getURLForUser(user).getOrElse(defaultURL));
+}
+
+boot(joeUser, 'http://site.com/en'); //'http://site.com/sp'
