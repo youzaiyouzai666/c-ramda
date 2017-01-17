@@ -15,5 +15,10 @@
   "bugs": {
     "url": "https://github.com/youzaiyouzai666/c-ramda/issues"
   },
-  "homepage": "https://github.com/youzaiyouzai666/c-ramda#readme"
+  "homepage": "https://github.com/youzaiyouzai666/c-ramda#readme",
+  "dependencies": {
+    "ramda": "^0.23.0",
+    "ramda-fantasy": "^0.7.0",
+    "requirejs": "^2.3.2"
+  }
 }
